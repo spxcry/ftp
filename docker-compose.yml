@@ -1,0 +1,27 @@
+version: '2'
+services:
+  ftp:
+    image: stilliard/pure-ftpd:hardened  #image ที่ใช้สร้าง container สำหรับ FTP Server
+    ports:
+      - "21:21" #แมพพอร์ต 21 เพื่อเชื่อมต่อ FTP server 
+      - "30000-30009:30000-30009" # พอร์ตสำหรับติดต่อดึงไฟล์
+    volumes:
+      - "./data:/home/BRUIT"                #โฟลเดอร์ data บนเครื่องhost เข้ากับ container
+      - "./passwd:/etc/pure-ftpd/passwd"    #โฟลเดอร์ passwd บนเครื่องhost เข้ากับ container
+    environment:
+      FTP_USER_NAME: BRUIT               # กำหนดชื่อผู้ใช้
+      FTP_USER_PASS: 2546                # กำหนดรหัสผ่าน
+      FTP_USER_HOME: /home/BRUIT         # ให้สิทธิ์เข้าถึงจัดการ
+    command: /run.sh pure-ftpd  -l puredb:/etc/pure-ftpd/pureftpd.pdb -E -j -R -P localhost -s -A -j -Z -H -4 -E -R -X -x  
+    #คำสั่งเริ่มต้นสำหรับ container ของ FTP server
+
+  web:
+    image: php:7.4-apache #image ที่ใช้สร้าง container สำหรับ web server
+    volumes:
+      - "./html:/var/www/html" # Mount ไดเรกทอรี "./html" บนเครื่อง host เข้ากับ /var/www/html ใน container
+    ports:
+      - "8080:80" # แมพพอร์ต 8080 ของเครื่อง host เข้ากับพอร์ต 80 ของ container เพื่อเปิดเว็บ
+    environment:
+      FTP_HOST: "ftp" #ชื่อโฮสต์ของ FTP
+      FTP_USER_NAME: "BRUIT" #ชื่อผู้ใช้ FTP
+      FTP_USER_PASS: "2546"  #รหัสผ่าน FTP
